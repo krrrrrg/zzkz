@@ -3,36 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사천성</title>
+    <title>청년,열정,인생 사천성</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>사천성</h1>
+            <h1>청년,열정,인생 사천성</h1>
             <a href="https://x.com/Krrkyakya" target="_blank" class="dev-link">@krrkyakya</a>
         </div>
         
-        <!-- 난이도 선택 제거하고 하드모드 설명 추가 -->
         <div class="mode-info">
             <span>하드모드: 2분 제한 / 10초마다 카드 재배치</span>
         </div>
         
         <div class="game-board"></div>
         <div class="game-controls">
-            <div class="score">남은 시간: <span id="timer">300</span>초</div>
+            <div class="score">남은 시간: <span id="timer">120</span>초</div>
             <div class="score">맞춘 개수: <span id="matches">0</span></div>
             <button id="gameRestartButton" class="restart-button">다시하기</button>
-        </div>
-        <canvas id="lineCanvas"></canvas>
-    </div>
-
-    <!-- 결과 모달 추가 -->
-    <div class="modal" id="resultModal">
-        <div class="modal-content">
-            <h2 id="modalTitle">축하합니다! 게임 클리어!</h2>
-            <p>소요 시간: <span id="finalTime">0</span>초</p>
-            <button id="restartButton">다시하기</button>
         </div>
     </div>
 

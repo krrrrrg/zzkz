@@ -37,6 +37,7 @@ h1 {
 .game-board {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
     gap: 5px;
     margin: 20px auto;
     padding: 10px;
@@ -45,37 +46,88 @@ h1 {
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     backdrop-filter: blur(4px);
     position: relative;
-    width: fit-content;
+    width: 90%;
+    max-width: 800px;
+    aspect-ratio: 1/1;
+    transition: opacity 0.15s ease-out;
 }
 
 .card {
     width: min(60px, calc((100vw - 40px) / 10 - 5px));
     height: min(60px, calc((100vw - 40px) / 10 - 5px));
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card .front,
+.card .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: transform 0.3s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
-    -webkit-touch-callout: none; /* iOS 길게 누르기 메뉴 방지 */
+}
+
+.card .front {
+    background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+}
+
+.card .back {
+    background: white;
+    transform: rotateY(180deg);
+    background-size: 80% 80%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.card.matched {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.card.empty {
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
 .card:hover {
     transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.card:hover img {
+    transform: scale(1.1);
 }
 
 .card.selected {
-    box-shadow: 0 0 10px #FFD700;
+    box-shadow: 0 0 15px #FFD700;
+    background: rgba(255, 215, 0, 0.1);
 }
 
 .card img {
-    width: 80%;
-    height: 80%;
+    width: 90%;
+    height: 90%;
     object-fit: contain;
+    border-radius: 4px;
+    transition: all 0.2s ease-out;
 }
 
 .score {
@@ -89,14 +141,6 @@ h1 {
     gap: 5px;
 }
 
-#lineCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 10;
-}
-
 .empty {
     visibility: hidden;
 }
@@ -108,8 +152,8 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
     justify-content: center;
     align-items: center;
 }
@@ -122,11 +166,18 @@ h1 {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     max-width: 400px;
     width: 90%;
+    animation: modalPop 0.3s ease-out;
+}
+
+@keyframes modalPop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 .modal h2 {
     color: #333;
     margin-bottom: 20px;
+    font-size: 1.5rem;
 }
 
 .modal p {
@@ -143,9 +194,7 @@ h1 {
     color: white;
     font-size: 1.1rem;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
+    transition: all 0.3s ease;
 }
 
 #restartButton:hover {
@@ -202,12 +251,12 @@ h1 {
     }
 
     .card {
-        border-radius: 6px;
+        padding: 3px;
     }
 
     .card img {
-        width: 90%;
-        height: 90%;
+        width: 95%;
+        height: 95%;
     }
 
     .score {
@@ -343,4 +392,55 @@ h1 {
 .dev-link, .restart-button, #restartButton {
     -webkit-tap-highlight-color: transparent;
     outline: none;
+}
+
+/* 클리어 메시지 스타일 정리 */
+.clear-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 100%;
+    padding: 20px;
+}
+
+/* 성공 메시지 스타일 */
+.clear-message.success h2 {
+    color: #FFD700;  /* 금색 */
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.clear-message.success p {
+    color: #fff;
+    font-size: 1.6rem;
+}
+
+/* 실패 메시지 스타일 */
+.clear-message.fail h2 {
+    color: #FF6B6B;  /* 붉은색 */
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.clear-message.fail p {
+    color: #fff;
+    font-size: 1.6rem;
+}
+
+/* 시간 표시 강조 */
+.clear-message p:last-of-type {
+    font-weight: bold;
+    margin: 20px 0;
+    font-size: 1.8rem;
+}
+
+/* 다시하기 버튼 스타일 */
+.clear-message .restart-button {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    padding: 12px 30px;
 } 
