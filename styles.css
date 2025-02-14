@@ -25,6 +25,8 @@ body {
     max-width: 1200px;
     text-align: center;
     position: relative;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 h1 {
@@ -46,15 +48,14 @@ h1 {
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     backdrop-filter: blur(4px);
     position: relative;
-    width: 90%;
-    max-width: 800px;
-    aspect-ratio: 1/1;
+    width: min(90vw, 800px); /* 뷰포트 너비의 90% 또는 800px 중 작은 값 */
+    aspect-ratio: 1/1; /* 정사각형 비율 유지 */
     transition: opacity 0.15s ease-out;
 }
 
 .card {
-    width: min(60px, calc((100vw - 40px) / 10 - 5px));
-    height: min(60px, calc((100vw - 40px) / 10 - 5px));
+    width: 100%;
+    aspect-ratio: 1/1; /* 카드도 정사각형 비율 유지 */
     background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     position: relative;
@@ -64,6 +65,7 @@ h1 {
     align-items: center;
     justify-content: center;
     padding: 5px;
+    box-sizing: border-box;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
     backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -238,7 +240,7 @@ h1 {
 
 /* 모바일 대응 */
 @media (max-width: 768px) {
-    body {
+    .container {
         padding: 10px;
     }
 
@@ -250,13 +252,19 @@ h1 {
         gap: 10px;
     }
 
+    .game-board {
+        gap: 3px;
+        padding: 5px;
+    }
+
     .card {
         padding: 3px;
     }
 
     .card img {
-        width: 95%;
-        height: 95%;
+        width: 90%;
+        height: 90%;
+        object-fit: contain;
     }
 
     .score {
