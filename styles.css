@@ -2,6 +2,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-user-select: none;  /* Safari */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Standard syntax */
+    cursor: default;
+    -webkit-tap-highlight-color: transparent; /* 모바일 탭 하이라이트 제거 */
+    outline: none; /* 포커스 아웃라인 제거 */
 }
 
 body {
@@ -53,6 +59,9 @@ h1 {
     cursor: pointer;
     transition: transform 0.3s;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    -webkit-touch-callout: none; /* iOS 길게 누르기 메뉴 방지 */
 }
 
 .card:hover {
@@ -135,6 +144,8 @@ h1 {
     font-size: 1.1rem;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 #restartButton:hover {
@@ -162,6 +173,12 @@ h1 {
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    -webkit-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 .dev-link:hover {
@@ -234,6 +251,8 @@ h1 {
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
     white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 .restart-button:hover {
@@ -261,4 +280,67 @@ h1 {
         padding: 6px 15px;
         font-size: 0.9rem;
     }
+}
+
+.difficulty-selector {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.difficulty-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.difficulty-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.difficulty-btn.active {
+    background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+}
+
+/* mode-info 스타일 수정 */
+.mode-info {
+    margin: 20px 0;
+    color: #FF6B6B;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: inline-block;
+    white-space: nowrap; /* 한 줄로 표시 */
+}
+
+.mode-info span {
+    display: inline-block;
+}
+
+/* 모바일에서 줄바꿈 허용 */
+@media (max-width: 768px) {
+    .mode-info {
+        white-space: normal;
+        font-size: 1rem;
+        padding: 8px 15px;
+    }
+}
+
+/* 카드에만 포인터 커서 적용 */
+.card:not(.empty) {
+    cursor: pointer;
+}
+
+/* 모든 클릭 가능한 요소에 추가 */
+.dev-link, .restart-button, #restartButton {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 } 

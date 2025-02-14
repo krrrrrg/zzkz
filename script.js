@@ -14,6 +14,10 @@ const BOARD_SIZE = 10;
 const canvas = document.getElementById('lineCanvas');
 const ctx = canvas.getContext('2d');
 
+// 난이도 관련 변수 수정
+const TIME_LIMIT = 120; // 2분
+let shuffleInterval; // 재배치 인터벌 변수 추가
+
 function initCanvas() {
     const boardElement = document.querySelector('.game-board');
     canvas.width = boardElement.offsetWidth;
@@ -216,8 +220,8 @@ function handleCardClick(row, col) {
                 }
                 
                 if(matchedPairs === 50) {  // baseImages.length * 5
-                    clearInterval(timerInterval);
-                    const timeSpent = 300 - timeLeft; // 소요 시간 계산
+                    endGame();
+                    const timeSpent = TIME_LIMIT - timeLeft;
                     setTimeout(() => {
                         showResultModal(timeSpent);
                     }, 500);
@@ -234,13 +238,15 @@ function updateTimer() {
     timeLeft--;
     document.getElementById('timer').textContent = timeLeft;
     if(timeLeft <= 0) {
-        clearInterval(timerInterval);
+        endGame();
         alert('시간 초과! 게임 오버');
         initGame();
     }
 }
 
 function initGame() {
+    clearInterval(shuffleInterval); // 이전 인터벌 제거
+    
     const modal = document.getElementById('resultModal');
     modal.style.display = 'none';
     
@@ -248,13 +254,15 @@ function initGame() {
     boardElement.innerHTML = '';
     selectedCards = [];
     matchedPairs = 0;
-    timeLeft = 300;
+    timeLeft = TIME_LIMIT;
+    
     document.getElementById('matches').textContent = '0';
     document.getElementById('timer').textContent = timeLeft;
     
     createBoard();
     initCanvas();
     
+    // 보드 UI 생성
     for(let i = 0; i < BOARD_SIZE; i++) {
         for(let j = 0; j < BOARD_SIZE; j++) {
             const card = document.createElement('div');
@@ -273,6 +281,21 @@ function initGame() {
             boardElement.appendChild(card);
         }
     }
+    
+    // 10초마다 카드 재배치
+    shuffleInterval = setInterval(() => {
+        const remainingCards = getRemainingCards();
+        if(remainingCards.length > 4) {
+            // 화면 깜빡임 효과
+            const boardElement = document.querySelector('.game-board');
+            boardElement.style.opacity = '0.3';
+            
+            setTimeout(() => {
+                reshuffleRemainingCards();
+                boardElement.style.opacity = '1';
+            }, 300);
+        }
+    }, 10000); // 10초로 변경
     
     clearInterval(timerInterval);
     timerInterval = setInterval(updateTimer, 1000);
@@ -335,44 +358,146 @@ function validatePairs() {
 // reshuffleRemainingCards 함수 수정
 function reshuffleRemainingCards() {
     const remainingCards = [];
-    const positions = [];
     
-    // 남은 카드와 위치를 수집
+    // 남은 카드 수집
     for(let i = 0; i < BOARD_SIZE; i++) {
         for(let j = 0; j < BOARD_SIZE; j++) {
             if(gameBoard[i][j]) {
-                remainingCards.push(gameBoard[i][j]);
-                positions.push({row: i, col: j});
+                remainingCards.push({
+                    card: gameBoard[i][j],
+                    oldPos: {row: i, col: j}
+                });
+                gameBoard[i][j] = null;
             }
         }
     }
-    
-    // 카드를 섞되, 짝이 맞도록 섞기
-    const shuffledCards = [];
+
+    // 카드 쌍을 찾아서 저장
+    const cardPairs = [];
     while(remainingCards.length > 0) {
         const card = remainingCards.pop();
-        const matchIndex = remainingCards.findIndex(c => c === card);
-        
+        const matchIndex = remainingCards.findIndex(c => c.card === card.card);
         if(matchIndex !== -1) {
-            // 짝이 있는 경우
             const matchCard = remainingCards.splice(matchIndex, 1)[0];
-            shuffledCards.push(card, matchCard);
-        } else {
-            // 짝이 없는 경우 (이런 경우가 없어야 함)
-            shuffledCards.push(card);
+            cardPairs.push([card, matchCard]);
         }
     }
-    
-    // 섞인 카드를 원래 위치에 재배치
-    positions.forEach((pos, index) => {
-        gameBoard[pos.row][pos.col] = shuffledCards[index];
+
+    // 보드의 모든 빈 위치 수집
+    const emptyPositions = [];
+    for(let i = 0; i < BOARD_SIZE; i++) {
+        for(let j = 0; j < BOARD_SIZE; j++) {
+            if(!gameBoard[i][j]) {
+                emptyPositions.push({row: i, col: j});
+            }
+        }
+    }
+
+    // 카드 쌍을 극한의 어려움으로 배치
+    cardPairs.forEach(pair => {
+        // 첫 번째 카드는 코너나 가장자리에 우선 배치
+        const cornerPositions = emptyPositions.filter(pos => 
+            (pos.row === 0 || pos.row === BOARD_SIZE-1) &&
+            (pos.col === 0 || pos.col === BOARD_SIZE-1)
+        );
+        
+        const edgePositions = emptyPositions.filter(pos => 
+            pos.row === 0 || pos.row === BOARD_SIZE-1 ||
+            pos.col === 0 || pos.col === BOARD_SIZE-1
+        );
+
+        let pos1;
+        if(cornerPositions.length > 0 && Math.random() < 0.7) {
+            // 70% 확률로 코너에 배치
+            const cornerIndex = Math.floor(Math.random() * cornerPositions.length);
+            pos1 = cornerPositions[cornerIndex];
+        } else if(edgePositions.length > 0 && Math.random() < 0.8) {
+            // 80% 확률로 가장자리에 배치
+            const edgeIndex = Math.floor(Math.random() * edgePositions.length);
+            pos1 = edgePositions[edgeIndex];
+        } else {
+            // 나머지는 랜덤 위치
+            const randomIndex = Math.floor(Math.random() * emptyPositions.length);
+            pos1 = emptyPositions[randomIndex];
+        }
+
+        // 첫 번째 카드 위치 제거
+        emptyPositions.splice(emptyPositions.findIndex(p => 
+            p.row === pos1.row && p.col === pos1.col), 1);
+
+        // 두 번째 카드 위치 선택을 위한 전략
+        let bestPos2Index = 0;
+        let maxDifficulty = 0;
+
+        emptyPositions.forEach((pos, index) => {
+            let difficulty = 0;
+            
+            // 1. 거리 점수 (멀수록 어려움)
+            const distance = Math.abs(pos.row - pos1.row) + Math.abs(pos.col - pos1.col);
+            difficulty += distance * 4;
+
+            // 2. 장애물 밀집도 점수
+            let obstacles = 0;
+            for(let i = -1; i <= 1; i++) {
+                for(let j = -1; j <= 1; j++) {
+                    const checkRow = pos.row + i;
+                    const checkCol = pos.col + j;
+                    if(checkRow >= 0 && checkRow < BOARD_SIZE && 
+                       checkCol >= 0 && checkCol < BOARD_SIZE && 
+                       gameBoard[checkRow][checkCol]) {
+                        obstacles++;
+                    }
+                }
+            }
+            difficulty += obstacles * 20;
+
+            // 3. 코너/가장자리 보너스
+            if(pos.row === 0 || pos.row === BOARD_SIZE-1 || 
+               pos.col === 0 || pos.col === BOARD_SIZE-1) {
+                difficulty += 40;
+                if((pos.row === 0 || pos.row === BOARD_SIZE-1) && 
+                   (pos.col === 0 || pos.col === BOARD_SIZE-1)) {
+                    difficulty += 60;
+                }
+            }
+
+            // 4. 직선 연결 방지 (매우 강력한 페널티)
+            if(pos.row === pos1.row || pos.col === pos1.col) {
+                difficulty -= 100;
+            }
+
+            // 5. 대각선 연결 방지
+            if(Math.abs(pos.row - pos1.row) === Math.abs(pos.col - pos1.col)) {
+                difficulty -= 50;
+            }
+
+            // 6. 중앙 지역 회피 점수
+            const centerDistance = Math.min(
+                Math.abs(pos.row - BOARD_SIZE/2),
+                Math.abs(pos.col - BOARD_SIZE/2)
+            );
+            difficulty += centerDistance * 15;
+
+            if(difficulty > maxDifficulty) {
+                maxDifficulty = difficulty;
+                bestPos2Index = index;
+            }
+        });
+
+        const pos2 = emptyPositions.splice(bestPos2Index, 1)[0];
+
+        // 카드 배치
+        gameBoard[pos1.row][pos1.col] = pair[0].card;
+        gameBoard[pos2.row][pos2.col] = pair[1].card;
     });
-    
+
     // 보드 UI 업데이트
     updateBoardUI();
-    
-    // 짝이 맞는지 다시 확인
-    validatePairs();
+
+    // 매칭 가능한 카드가 있는지 확인
+    if(!hasValidMoves()) {
+        reshuffleRemainingCards();
+    }
 }
 
 // 보드 UI를 업데이트하는 함수
@@ -417,6 +542,25 @@ document.getElementById('gameRestartButton').addEventListener('click', () => {
         initGame();
     }
 });
+
+// 남은 카드 가져오는 함수 추가
+function getRemainingCards() {
+    const remainingCards = [];
+    for(let i = 0; i < BOARD_SIZE; i++) {
+        for(let j = 0; j < BOARD_SIZE; j++) {
+            if(gameBoard[i][j]) {
+                remainingCards.push(gameBoard[i][j]);
+            }
+        }
+    }
+    return remainingCards;
+}
+
+// 게임 종료 시 인터벌 정리
+function endGame() {
+    clearInterval(timerInterval);
+    clearInterval(shuffleInterval);
+}
 
 // 게임 시작
 window.addEventListener('load', initGame); 
